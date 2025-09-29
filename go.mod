@@ -1,3 +1,3 @@
-module example.com/lists
+module example.com/functions
 
 go 1.25.0

@@ -1,43 +1,54 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
-type floatMap map[string]float64
+type transformFn func(int) int
 
-func (m floatMap) output() {
-	fmt.Println(m)
-}
+// type anotherFn func(int, []string, map[string][]int) ([]int, string)
 
 func main() {
-	userNames := make([]string, 2, 5)
-	// userNames := []string{}
+	numbers := []int{1, 2, 3, 4}
+	moreNumbers := []int{5, 1, 2}
+	doubled := transformNumbers(&numbers, double)
+	tripled := transformNumbers(&numbers, triple)
 
-	userNames[0] = "Julie"
+	fmt.Println(doubled)
+	fmt.Println(tripled)
 
-	userNames = append(userNames, "Max")
-	userNames = append(userNames, "Manuel")
-	
-	fmt.Println(userNames)
+	transformerFn1 := getTransformerFunction(&numbers)
+	transformerFn2 := getTransformerFunction(&moreNumbers)
 
-	courseRatings := make(floatMap, 3)
+	transformedNumbers := transformNumbers(&numbers, transformerFn1)
+	moreTransformedNumbers := transformNumbers(&moreNumbers, transformerFn2)
 
-	courseRatings["go"] = 4.7
-	courseRatings["react"] = 4.8
-	courseRatings["angular"] = 4.7
+	fmt.Println(transformedNumbers)
+	fmt.Println(moreTransformedNumbers)
+}
 
-	courseRatings.output()
+func transformNumbers(numbers *[]int, transform transformFn) []int {
+	dNumbers := []int{}
 
-	// fmt.Println(courseRatings)
-
-	for index, value := range userNames {
-		// ...
-		fmt.Println("Index:", index)
-		fmt.Println("Value:", value)
+	for _, val := range *numbers {
+		dNumbers = append(dNumbers, transform(val))
 	}
 
-	for key, value := range courseRatings {
-		// ...
-		fmt.Println("Key:", key)
-		fmt.Println("Value:", value)
+	return dNumbers
+}
+
+func getTransformerFunction(numbers *[]int) transformFn {
+	if (*numbers)[0] == 1 {
+		return double
+	} else {
+		return triple
 	}
+}
+
+func double(number int) int {
+	return number * 2
+}
+
+func triple(number int) int {
+	return number * 3
 }
