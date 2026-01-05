@@ -1,22 +1,40 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
-func main() {
-	numbers := []int{1, 10, 15}
-	sum := sumup(1, 10, 15, 40, -5)
-	anotherSum := sumup(1, numbers...)
-
-	fmt.Println(sum)
-	fmt.Println(anotherSum)
+func greet(phrase string, doneChan chan bool) {
+	fmt.Println("Hello!", phrase)
+	doneChan <- true
 }
 
-func sumup(startingValue int, numbers ...int) int {
-	sum := 0
+func slowGreet(phrase string, doneChan chan bool) {
+	time.Sleep(3 * time.Second) // simulate a slow, long-taking task
+	fmt.Println("Hello!", phrase)
+	doneChan <- true
+	close(doneChan)
+}
 
-	for _, val := range numbers {
-		sum += val // sum = sum + val
+func main() {
+	// dones := make([]chan bool, 4)
+	done := make(chan bool)
+
+	// dones[0] = make(chan bool)
+	go greet("Nice to meet you!", done)
+	// dones[1] = make(chan bool)
+	go greet("How are you?", done)
+	// dones[2] = make(chan bool)
+	go slowGreet("How ... are ... you ...?", done)
+	// dones[3] = make(chan bool)
+	go greet("I hope you're liking the course!", done)
+
+	// for _, done := range dones {
+	// 	<- done
+	// }
+
+	for range done {
+		// fmt.Println(doneChan)
 	}
-
-	return sum
 }
