@@ -2,39 +2,38 @@ package main
 
 import (
 	"fmt"
-	"time"
+
+	"example.com/price-calculator/filemanager"
+	"example.com/price-calculator/prices"
 )
 
-func greet(phrase string, doneChan chan bool) {
-	fmt.Println("Hello!", phrase)
-	doneChan <- true
-}
-
-func slowGreet(phrase string, doneChan chan bool) {
-	time.Sleep(3 * time.Second) // simulate a slow, long-taking task
-	fmt.Println("Hello!", phrase)
-	doneChan <- true
-	close(doneChan)
-}
-
 func main() {
-	// dones := make([]chan bool, 4)
-	done := make(chan bool)
+	taxRates := []float64{0, 0.07, 0.1, 0.15}
+	doneChans := make([]chan bool, len(taxRates))
+	errorChans := make([]chan error, len(taxRates))
 
-	// dones[0] = make(chan bool)
-	go greet("Nice to meet you!", done)
-	// dones[1] = make(chan bool)
-	go greet("How are you?", done)
-	// dones[2] = make(chan bool)
-	go slowGreet("How ... are ... you ...?", done)
-	// dones[3] = make(chan bool)
-	go greet("I hope you're liking the course!", done)
+	for index, taxRate := range taxRates {
+		doneChans[index] = make(chan bool)
+		errorChans[index] = make(chan error)
+		fm := filemanager.New("prices.txt", fmt.Sprintf("result_%.0f.json", taxRate*100))
+		// cmdm := cmdmanager.New()
+		priceJob := prices.NewTaxIncludedPriceJob(fm, taxRate)
+		go priceJob.Process(doneChans[index], errorChans[index])
 
-	// for _, done := range dones {
-	// 	<- done
-	// }
+		// if err != nil {
+		// 	fmt.Println("Could not process job")
+		// 	fmt.Println(err)
+		// }
+	}
 
-	for range done {
-		// fmt.Println(doneChan)
+	for index, _ := range taxRates {
+		select {
+		case err := <-errorChans[index]:
+			if err != nil {
+				fmt.Println(err)
+			}
+		case <-doneChans[index]:
+			fmt.Println("Done!")
+		}
 	}
 }
